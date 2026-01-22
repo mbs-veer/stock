@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Size Report</title>
+    <style>
+        :root { --primary: #25D366; --dark: #128C7E; --bg: #f0f2f5; }
+        body { font-family: -apple-system, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; padding-bottom: 80px; }
+        .container { max-width: 500px; margin: 0 auto; }
+        
+        h1 { text-align: center; color: #333; margin-bottom: 5px; font-size: 22px; }
+        .header-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        label { display: block; font-size: 11px; font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: #fff; }
+
+        .stand-card { background: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .stand-title { font-weight: bold; font-size: 18px; margin-bottom: 12px; color: #222; }
+        
+        /* Mobile Stacking */
+        .stand-inputs { display: flex; flex-direction: column; gap: 12px; }
+        
+        @media (min-width: 450px) {
+            .stand-inputs { flex-direction: row; align-items: flex-end; }
+            .stand-inputs div { flex: 1; }
+        }
+
+        .btn-export { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 450px; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); z-index: 100; }
+        .btn-export:active { background: var(--dark); transform: translateX(-50%) scale(0.98); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Stock Size Report</h1>
+    
+    <div class="header-card">
+        <div class="grid-inputs">
+            <div><label>Date</label><input type="date" id="repDate"></div>
+            <div><label>Shift</label>
+                <select id="repShift">
+                    <option>Day</option>
+                    <option>Night</option>
+                </select>
+            </div>
+            <div><label>Time</label><input type="time" id="repTime"></div>
+            <div><label>Size (Title)</label>
+                <select id="repSize">
+                    <option value="">Select Size</option>
+                    <option>10MM</option>
+                    <option>12MM</option>
+                    <option>16MM</option>
+                    <option>20MM</option>
+                    <option>25MM</option>
+                    <option>32MM</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="standList"></div>
+
+    <button class="btn-export" onclick="sendToWhatsApp()">Export to WhatsApp</button>
+</div>
+
+<script>
+    const standNames = ["Stand A", ...Array.from({length: 18}, (_, i) => `Stand ${i + 1}`)];
+    const listDiv = document.getElementById('standList');
+
+    standNames.forEach((name, i) => {
+        const card = document.createElement('div');
+        card.className = 'stand-card';
+        card.innerHTML = `
+            <div class="stand-title">${name}</div>
+            <div class="stand-inputs">
+                <div>
+                    <label>Stock Size</label>
+                    <input type="text" id="size_${i}" placeholder="Enter Size">
+                </div>
+                <div>
+                    <label>Status</label>
+                    <select id="stat_${i}">
+                        <option value="-">-</option>
+                        <option value="Opened">Opened</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Value</label>
+                    <input type="number" id="val_${i}" placeholder="0.00">
+                </div>
+            </div>
+        `;
+        listDiv.appendChild(card);
+    });
+
+    function sendToWhatsApp() {
+        const d = document.getElementById('repDate').value;
+        const s = document.getElementById('repShift').value;
+        const t = document.getElementById('repTime').value;
+        const sz = document.getElementById('repSize').value;
+
+        let msg = `*Stock Size Report*\n`;
+        msg += `Date: ${d}\nShift: ${s}\nTime: ${t}\nSize: ${sz}\n`;
+        msg += `----------------------------\n`;
+
+        let hasData = false;
+        standNames.forEach((name, i) => {
+            const stockSize = document.getElementById(`size_${i}`).value;
+            const status = document.getElementById(`stat_${i}`).value;
+            const value = document.getElementById(`val_${i}`).value;
+
+            // Only include if Stock Size is entered
+            if (stockSize.trim() !== "") {
+                hasData = true;
+                let line = `*${name}*: ${stockSize}`;
+                
+                // Only include Status/Value if they are not default
+                if (status !== "-" || value !== "") {
+                    line += ` | ${status}: ${value || '0'} mm`;
+                }
+                msg += line + `\n`;
+            }
+        });
+
+        if (!hasData) {
+            alert("Please enter a Stock Size for at least one stand.");
+            return;
+        }
+
+        const url = "https://wa.me/?text=" + encodeURIComponent(msg);
+        window.open(url, '_blank');
+    }
+
+    document.getElementById('repDate').valueAsDate = new Date();
+</script>
+
+</body>
+</html>
