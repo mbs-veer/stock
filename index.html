@@ -115,7 +115,7 @@
             // Only include if Stock Size is entered
             if (stockSize.trim() !== "") {
                 hasData = true;
-                let line = `*${name}*: ${stockSize}`;
+                let line = `*${name}*: ${stockSize} mm`;
                 
                 // Only include Status/Value if they are not default
                 if (status !== "-" || value !== "") {
@@ -138,4 +138,5 @@
 </script>
 
 </body>
+
 </html>
